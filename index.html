@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Cobrança Progressiva - Taxa Customizável</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.15);
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 2.5rem 1rem;
+    }
+
+    .container {
+      max-width: 950px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    .simulator-card {
+      border: 1px solid #38bdf8;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+      background: linear-gradient(180deg, rgba(30, 41, 59, 1) 0%, rgba(15, 23, 42, 0.95) 100%);
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      color: #fff;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Controles do Simulador */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    input[type="number"], select {
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: #fff;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    select {
+      cursor: pointer;
+    }
+
+    input[type="number"]:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    .slider-container {
+      margin-top: 0.5rem;
+      margin-bottom: 1.5rem;
+      background: rgba(15, 23, 42, 0.5);
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+
+    /* Painel de Resultados */
+    .sim-result-box {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .res-item {
+      padding: 0.75rem;
+      border-radius: 8px;
+      background: rgba(30, 41, 59, 0.5);
+    }
+
+    .res-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .res-val {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .res-highlight {
+      color: var(--accent);
+      font-size: 1.6rem;
+    }
+
+    /* Parâmetros */
+    .params-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 1rem;
+    }
+
+    .param-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .param-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.35rem;
+    }
+
+    .param-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* Tabela Dinâmica */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    th {
+      background-color: #1e293b;
+      color: var(--text-muted);
+      padding: 0.85rem 1rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--card-border);
+      text-align: center;
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+    }
+
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+      color: #cbd5e1;
+      text-align: center;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: rgba(56, 189, 248, 0.04);
+    }
+
+    .total-val {
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    .math-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--accent);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .math-card h3 {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .math-expr {
+      font-family: "Cambria Math", "Times New Roman", serif;
+      font-style: italic;
+      font-size: 1.15rem;
+      color: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">Simulador & Modelo Tarifário</span>
+      <h1>Cobrança Progressiva Exponencial</h1>
+      <p class="subtitle">Taxa fixa de R$ 35,00 (franquia de 2 horas) com taxa de crescimento ajustável.</p>
+    </header>
+
+    <!-- SIMULADOR INTERATIVO -->
+    <section class="card simulator-card">
+      <h2>🧮 Simulador com Taxa Customizável</h2>
+
+      <div class="controls-grid">
+        <div class="input-group">
+          <label for="select-preset">Taxa de Aumento por Minuto</label>
+          <select id="select-preset">
+            <option value="0.005">0,5% / min (Muito Suave)</option>
+            <option value="0.01">1,0% / min (Suave)</option>
+            <option value="0.02">2,0% / min (Moderada)</option>
+            <option value="0.03" selected>3,0% / min (Padrão Atual)</option>
+            <option value="0.04">4,0% / min (Forte)</option>
+            <option value="0.05">5,0% / min (Agressiva)</option>
+            <option value="custom">Personalizada...</option>
+          </select>
+        </div>
+
+        <div class="input-group" id="group-custom-taxa" style="display: none;">
+          <label for="input-custom-taxa">Taxa Personalizada (% / min)</label>
+          <input type="number" id="input-custom-taxa" min="0.1" max="50" step="0.1" value="3.0">
+        </div>
+
+        <div class="input-group">
+          <label for="input-horas">Horas Totais</label>
+          <input type="number" id="input-horas" min="0" max="24" value="2" step="1">
+        </div>
+
+        <div class="input-group">
+          <label for="input-minutos">Minutos Adicionais</label>
+          <input type="number" id="input-minutos" min="0" max="59" value="30" step="1">
+        </div>
+      </div>
+
+      <div class="slider-container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label for="range-minutos" style="margin: 0;">Ajuste Rápido de Tempo:</label>
+          <strong id="slider-label" style="color: var(--accent);">2h 30m (150 min)</strong>
+        </div>
+        <input type="range" id="range-minutos" min="0" max="300" value="150" step="1">
+      </div>
+
+      <div class="sim-result-box">
+        <div class="res-item">
+          <div class="res-label">Minutos Extras (m)</div>
+          <div class="res-val" id="res-extras">30 min</div>
+        </div>
+        <div class="res-item">
+          <div class="res-label">Último Minuto (vₘ)</div>
+          <div class="res-val" id="res-ultimo-min">R$ 1,18</div>
+        </div>
+        <div class="res-item">
+          <div class="res-label">Custo do Excedente</div>
+          <div class="res-val" id="res-adicional">R$ 23,79</div>
+        </div>
+        <div class="res-item" style="border: 1px solid rgba(56, 189, 248, 0.4);">
+          <div class="res-label">Total a Pagar</div>
+          <div class="res-val res-highlight" id="res-total">R$ 58,79</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Parâmetros Base -->
+    <section class="card">
+      <h2>1. Configuração Atual da Modelagem</h2>
+      <div class="params-grid">
+        <div class="param-box">
+          <div class="param-title">Franquia Base</div>
+          <div class="param-value">2h 00m</div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">120 min inclusos</span>
+        </div>
+        <div class="param-box">
+          <div class="param-title">Tarifa Fixa</div>
+          <div class="param-value">R$ 35,00</div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Período de franquia</span>
+        </div>
+        <div class="param-box">
+          <div class="param-title">1º Minuto Extra (v₁)</div>
+          <div class="param-value">R$ 0,50</div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Minuto 121</span>
+        </div>
+        <div class="param-box">
+          <div class="param-title">Taxa Ativa</div>
+          <div class="param-value" id="card-taxa-ativa">+3,0% / min</div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);" id="card-razao-ativa">Razão q = 1,03</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabela Dinâmica de Simulação -->
+    <section class="card">
+      <h2>3. Tabela Progressiva Atualizada em Tempo Real</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+        Esta tabela é recalculada automaticamente conforme a taxa percentual selecionada acima.
+      </p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Tempo Total</th>
+              <th>Minutos Extras (m)</th>
+              <th>Custo do Minuto (v<sub>m</sub>)</th>
+              <th>Adicional Acumulado (S<sub>m</sub>)</th>
+              <th>Total a Pagar</th>
+            </tr>
+          </thead>
+          <tbody id="dynamic-table-body">
+            <!-- Gerado via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Fórmulas -->
+    <section class="card">
+      <h2>4. Fórmulas Parametrizadas</h2>
+      <div class="math-card">
+        <h3>Custo Marginal do Minuto m</h3>
+        <div class="math-expr">v<sub>m</sub> = 0,50 · (1 + i)<sup>m - 1</sup></div>
+      </div>
+      <div class="math-card">
+        <h3>Total Acumulado</h3>
+        <div class="math-expr">Total = 35,00 + 0,50 · [ (1 + i)<sup>m</sup> - 1 ] / i</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const selectPreset = document.getElementById('select-preset');
+    const groupCustomTaxa = document.getElementById('group-custom-taxa');
+    const inputCustomTaxa = document.getElementById('input-custom-taxa');
+    const inputHoras = document.getElementById('input-horas');
+    const inputMinutos = document.getElementById('input-minutos');
+    const rangeMinutos = document.getElementById('range-minutos');
+    const sliderLabel = document.getElementById('slider-label');
+
+    const resExtras = document.getElementById('res-extras');
+    const resUltimoMin = document.getElementById('res-ultimo-min');
+    const resAdicional = document.getElementById('res-adicional');
+    const resTotal = document.getElementById('res-total');
+
+    const cardTaxaAtiva = document.getElementById('card-taxa-ativa');
+    const cardRazaoAtiva = document.getElementById('card-razao-ativa');
+    const dynamicTableBody = document.getElementById('dynamic-table-body');
+
+    const BASE_FIXA = 35.0;
+    const FRANQUIA_MIN = 120;
+    const V1 = 0.50;
+
+    function formatBRL(valor) {
+      return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function getTaxa() {
+      if (selectPreset.value === 'custom') {
+        const val = parseFloat(inputCustomTaxa.value) || 0;
+        return val / 100;
+      }
+      return parseFloat(selectPreset.value);
+    }
+
+    function renderTabela(taxa) {
+      const q = 1 + taxa;
+      const pontos = [0, 5, 10, 15, 20, 30, 45, 60, 90, 120];
+      let rowsHtml = '';
+
+      pontos.forEach(m => {
+        const tempoTotal = FRANQUIA_MIN + m;
+        const h = Math.floor(tempoTotal / 60);
+        const minRest = tempoTotal % 60;
+        const tempoStr = `${h}h ${minRest < 10 ? '0' : ''}${minRest}m`;
+
+        let vMarginal = 0;
+        let sAcumulado = 0;
+
+        if (m > 0) {
+          vMarginal = V1 * Math.pow(q, m - 1);
+          if (taxa === 0) {
+            sAcumulado = V1 * m;
+          } else {
+            sAcumulado = V1 * (Math.pow(q, m) - 1) / taxa;
+          }
+        }
+
+        const totalPagar = BASE_FIXA + sAcumulado;
+
+        rowsHtml += `
+          <tr>
+            <td><strong>${tempoStr}</strong></td>
+            <td>${m} min</td>
+            <td>${m > 0 ? formatBRL(vMarginal) : '—'}</td>
+            <td>${formatBRL(sAcumulado)}</td>
+            <td class="total-val">${formatBRL(totalPagar)}</td>
+          </tr>
+        `;
+      });
+
+      dynamicTableBody.innerHTML = rowsHtml;
+    }
+
+    function calcular(tempoTotalMin) {
+      const taxa = getTaxa();
+      const q = 1 + taxa;
+      const extras = Math.max(0, tempoTotalMin - FRANQUIA_MIN);
+
+      let custoAcumuladoExtras = 0;
+      let custoUltimoMinuto = 0;
+
+      if (extras > 0) {
+        custoUltimoMinuto = V1 * Math.pow(q, extras - 1);
+        if (taxa === 0) {
+          custoAcumuladoExtras = V1 * extras;
+        } else {
+          custoAcumuladoExtras = V1 * (Math.pow(q, extras) - 1) / taxa;
+        }
+      }
+
+      const totalPagar = BASE_FIXA + custoAcumuladoExtras;
+
+      resExtras.textContent = `${extras} min`;
+      resUltimoMin.textContent = extras > 0 ? formatBRL(custoUltimoMinuto) : '—';
+      resAdicional.textContent = formatBRL(custoAcumuladoExtras);
+      resTotal.textContent = formatBRL(totalPagar);
+
+      const h = Math.floor(tempoTotalMin / 60);
+      const m = tempoTotalMin % 60;
+      sliderLabel.textContent = `${h}h ${m < 10 ? '0' : ''}${m}m (${tempoTotalMin} min)`;
+
+      // Atualiza cards informativos
+      const percentStr = (taxa * 100).toFixed(1).replace('.', ',');
+      cardTaxaAtiva.textContent = `+${percentStr}% / min`;
+      cardRazaoAtiva.textContent = `Razão q = ${q.toFixed(4).replace('.', ',')}`;
+    }
+
+    function atualizarTudo() {
+      const h = parseInt(inputHoras.value) || 0;
+      const m = parseInt(inputMinutos.value) || 0;
+      const total = (h * 60) + m;
+      rangeMinutos.value = Math.min(rangeMinutos.max, total);
+      const taxa = getTaxa();
+      renderTabela(taxa);
+      calcular(total);
+    }
+
+    function sincronizarPorSlider() {
+      const total = parseInt(rangeMinutos.value) || 0;
+      const h = Math.floor(total / 60);
+      const m = total % 60;
+      inputHoras.value = h;
+      inputMinutos.value = m;
+      calcular(total);
+    }
+
+    selectPreset.addEventListener('change', () => {
+      if (selectPreset.value === 'custom') {
+        groupCustomTaxa.style.display = 'flex';
+      } else {
+        groupCustomTaxa.style.display = 'none';
+      }
+      atualizarTudo();
+    });
+
+    inputCustomTaxa.addEventListener('input', atualizarTudo);
+    inputHoras.addEventListener('input', atualizarTudo);
+    inputMinutos.addEventListener('input', atualizarTudo);
+    rangeMinutos.addEventListener('input', sincronizarPorSlider);
+
+    // Inicialização
+    atualizarTudo();
+  </script>
+</body>
+</html>
